@@ -41,7 +41,7 @@ public class ServerRecording {
 //  private static final Logger LOGGER = LoggerFactory.getLogger(ServerRecording.class);
   public static final DateTimeFormatter FORMAT = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.LONG);
   private boolean active;
-  private String level = "";
+  private String level = "  ";
 
   public ServerRecording(Path file) {
     this.file = file;
@@ -88,6 +88,7 @@ public class ServerRecording {
       if (isReplication(r)) {
         session.set(r.getLong("session"));
         seq.set(r.getLong("sequence"));
+        setActive(r);
       }
       return new LoggableRecord(session.get(), seq.get(), r);
     });
@@ -128,19 +129,23 @@ public class ServerRecording {
   }
 
   private void setActive(RecordedEvent event) {
-    active = (event.getLong("session") >= 0);
+    boolean setting = (event.getLong("session") >= 0);
+    if (setting != active) {
+      setLevel(setting ? 0 : 1);
+      active = setting;
+    }
   }
 
   private boolean isLoggable(RecordedEvent event) {
     String type = event.getEventType().getName();
-    return  type.equals("org.terracotta.tripwire.LogEvent") || type.equals("com.tc.objectserver.entity.ReplicationEvent");
+    return  type.equals("org.terracotta.tripwire.LogEvent") || type.equals("org.terracotta.tripwire.ReplicationEvent");
   }
 
-  private boolean isLog(RecordedEvent event) {
+  static boolean isLog(RecordedEvent event) {
     return (event.getEventType().getName().equals("org.terracotta.tripwire.LogEvent"));
   }
 
-  private boolean isReplication(RecordedEvent event) {
-    return (event.getEventType().getName().equals("com.tc.objectserver.entity.ReplicationEvent"));
+  static boolean isReplication(RecordedEvent event) {
+    return (event.getEventType().getName().equals("org.terracotta.tripwire.ReplicationEvent"));
   }
 }

@@ -78,10 +78,10 @@ public class StripeRecordings {
     }
     List<ServerRecording> servers = sources.stream().map(ServerRecording::new).collect(Collectors.toList());
     Iterator<ServerRecording> it = servers.iterator();
-    Stream base = it.next().sortedLogs();
+    Stream<LoggableRecord> base = it.next().sortedLogs();
     while (it.hasNext()) {
       base = Stream.concat(base, it.next().sortedLogs());
     }
-    base.sorted().forEach(System.out::println);
+    base.sorted().filter(LoggableRecord::isLog).forEach(System.out::println);
   }
 }

@@ -43,19 +43,27 @@ public class LoggableRecord implements Comparable {
   public int compareTo(Object o) {
     if (o instanceof LoggableRecord) {
       LoggableRecord other = (LoggableRecord)o;
-      long diff = session - other.session;
-      if (diff == 0) {
-        long seq = sequence - other.sequence;
-        if (seq == 0) {
-          return this.event.getStartTime().compareTo(other.event.getStartTime());
+      long seq = sequence - other.sequence;
+      if (seq == 0) {
+        if (session == -1 && other.session >= 0) {
+          return 1;
+        } else if (other.session == -1 && session >= 0) {
+          return -1;
         } else {
-          return seq < 0 ? -1 : 1;
+          return 0;
         }
-      } else {
-        return diff < 0 ? -1 : 1;
       }
+      return (int)seq;
     }
     return 0;
+  }
+
+  public boolean isLog() {
+    return ServerRecording.isLog(event);
+  }
+
+  public boolean isReplication() {
+    return ServerRecording.isReplication(event);
   }
 
   public boolean isActive() {
@@ -93,16 +101,25 @@ public class LoggableRecord implements Comparable {
   @Override
   public String toString() {
     StringBuilder text = new StringBuilder();
-    if (!isActive()) {
-      text.append("   ");
+    if (isLog()) {
+      if (!isActive()) {
+        text.append("   +---- ");
+      }
+      text.append(FORMAT.format(event.getStartTime().atZone(ZoneId.systemDefault())));
+      text.append(" - ");
+      text.append(event.getString("level"));
+      text.append(":");
+      text.append(event.getString("name"));
+      text.append("  --  ");
+      text.append(event.getString("statement"));
+      return text.toString();
+    } else {
+      text.append("---------- ");
+      text.append(session);
+      text.append(":");
+      text.append(sequence);
+      text.append(" ----------");
+      return text.toString();
     }
-    text.append(FORMAT.format(event.getStartTime().atZone(ZoneId.systemDefault())));
-    text.append(" - ");
-    text.append(event.getString("level"));
-    text.append(":");
-    text.append(event.getString("name"));
-    text.append("  --  ");
-    text.append(event.getString("statement"));
-    return text.toString();
   }
 }
