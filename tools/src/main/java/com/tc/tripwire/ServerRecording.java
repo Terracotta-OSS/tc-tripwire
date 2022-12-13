@@ -95,28 +95,12 @@ public class ServerRecording {
   }
 
   public void printAllLogs() throws IOException {
-    streamify().filter(this::isLog).sorted((a, b)->a.getStartTime().compareTo(b.getStartTime())).forEachOrdered(this::printLog);
+    streamify().filter(ServerRecording::isLog).sorted((a, b)->a.getStartTime().compareTo(b.getStartTime())).forEachOrdered(this::printLog);
   }
 
   private void printLog(RecordedEvent event) {
     System.out.printf("%s%s - %s:%s -- %s\n", level, FORMAT.format(event.getStartTime().atZone(ZoneId.systemDefault())), event.getString("level"), event.getString("name"), event.getString("statement"));
   }
-
-//  public long printToReplication(long marker) throws IOException {
-//    while (file.hasMoreEvents()) {
-//      RecordedEvent event = file.readEvent();
-//      if (isLog(event)) {
-//        System.out.printf("%s%s - %s:%s -- %s\n", level, FORMAT.format(event.getStartTime().atZone(ZoneId.systemDefault())), event.getString("level"), event.getString("name"), event.getString("statement"));
-//      } else if (isReplication(event)) {
-//        setActive(event);
-//        position = event.getLong("sequence");
-//        if (marker < 0 || marker == position) {
-//          return position;
-//        }
-//      }
-//    }
-//    return Long.MIN_VALUE;
-//  }
 
   public void setLevel(int lev) {
     char[] spaces = new char[lev*2];
